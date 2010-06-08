@@ -1,17 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from meldable_priority_queue import meldable_priority_queue
+from meldable_priority_queue import *
 from math import log
 
 class fibonacci_node(object):
-	def __init__(self, key):
+	def __init__(self, key, element = None):
 		self.key = key
 		self.degree = 0
 		self.p = None
 		self.child = None
 		self.mark = False
 		self.right = self.left = self
+		self.element = element
 		
 	def __iter__(self):
 		count = 1
@@ -58,17 +59,53 @@ class fibonacci_node(object):
 		other.left = oldleft
 		
 
-class fibonacci_priority_queue():
+class fibonacci_priority_queue(meldable_priority_queue):
 
 	def __init__(self, comparator = lambda x, y: x < y, collection = None, iterator = None):
+		self._comparator = comparator
+		self.__size = 0
+
+		if collection != None:
+			for element in collection:
+				insert(self, element)
+		self._iterator = iterator
 		self.min = None
-		meldable_priority_queue.__init__(self, comparator, collection, iterator)
-		
-	def __iter__(self):
-		return self
 		
 	def __del__(self):
 		self.min = None
+		
+	def __repr__(self):
+		return object.__repr__(self)
+	
+	def __str__(self):
+		return self.__repr__()
+		
+	comparator = property(get_comparator)
+	
+	# Overwrites the API function
+	def __iter__(self):
+		return self
+		
+	iterator = property(__iter__, set_iterator)
+	
+	def get_size(self):
+		return self.__size
+	
+	size = property(get_size)
+	
+	is_empty = property(get_is_empty)
+	
+	# INCOMPLETE
+	def swap(self, other):
+		tmp = other
+		other = self
+		self = tmp
+
+	def find_top(self):
+		return self.min
+	
+	def top(self):
+		pass # INCOMPLETE
 
 	def insert(self, x):
 		x.degree = 0
@@ -84,24 +121,29 @@ class fibonacci_priority_queue():
 			self.min.insert(x)
 			if x.key < self.min.key:
 				self.min = x
-		self.size += 1
+		self.__size += 1	
 
-	def union(self, other):
-		# concatenate the root list of other to self
-		self.min.concatenate(other)
-		if self.min == None or (other.min != None and other.min.key < self.min.key):
-			self.min = other.min
-		self.size += other.size
-		return self
-		
-	def D(self):
-		return log(self.size, 2)
-		
-	def erase(self, encapsulator):
-		pass #mangler
-		
-	def consolidate(self):
-		A = [None for x in range(int(self.D()) + 1)]
+	# Overwrites the API method
+	def extract_top(self):	
+		z = self.min
+		if z != None:
+			if z.child != None:
+				for x in z.child:
+					self.min.insert(x)
+					x.p = None
+					
+			z.remove()
+			if z == z.right:
+				self.min = None
+			else:
+				self.min = z.right
+				self.__consolidate()
+			self.__size -= 1
+		return z
+	
+	# Helper-function for extract_top
+	def __consolidate(self):
+		A = [None for x in range(int(self.__D()) + 1)]
 
 		for w in self.min:			
 			x = w
@@ -110,14 +152,14 @@ class fibonacci_priority_queue():
 				y = A[d]
 				if x.key > y.key:
 					x.exchange(y)
-				self.heap_link(y, x)
+				self.__heap_link(y, x)
 				A[d] = None
 				d += 1
 			A[d] = x
-				
-		self.min = None
 		
-		for i in range(int(self.D()) + 1):
+		self.min = None
+
+		for i in range(int(self.__D()) + 1):
 			if A[i] != None:
 				if self.min == None:
 					# create a root list for self containing just A[i]
@@ -127,9 +169,15 @@ class fibonacci_priority_queue():
 					#insert A[i] H's root list
 					self.min.insert(A[i])
 					if A[i].key < self.min.key:
-						self.min = A[i]
+						self.min = A[i]	
+						
+	# Helper-function for __consolidate
+	# Returns the max number of elements in the root list.
+	def __D(self):
+		return log(self.__size, 2)
 		
-	def heap_link(self, y, x):
+	# Helper-function for __consolidate
+	def __heap_link(self, y, x):
 		#remove y from the root list of H
 		y.remove()
 		
@@ -145,42 +193,22 @@ class fibonacci_priority_queue():
 		
 		y.mark = False
 		
-	def extract_top(self):
-		z = self.min
-		if z != None:
-			if z.child != None:
-				for x in z.child:
-					self.min.insert(x)
-					x.p = None
-					
-			z.remove()
-			if z == z.right:
-				self.min = None
-			else:
-				self.min = z.right
-				self.consolidate()
-			self.size -= 1
-		return z
+	def extract(self, encapsulator):
+		pass # UNIMPLEMENTED
 	
-	def find_top(self):
-		return self.min
-				
-	def cut(self, x, y):
-		if x.right != x:
-			x.remove()
-		y.degree -= 1
-		self.min.insert(x)
-		x.p = None
-		x.mark = False
-			
-	def cascading_cut(self, y):
-		z = y.p
-		if z != None:
-			if y.mark == False:
-				y.mark = True
-			else:
-				self.cut(y, z)
-				self.cascading_cut(z)
+	def erase(self, encapsulator):
+		pass # UNIMPLEMENTED
+	
+	def increase(self, encapsulator, element):
+		pass # UNIMPLEMENTED
+	
+	def union(self, other):
+		# concatenate the root list of other to self
+		self.min.concatenate(other)
+		if self.min == None or (other.min != None and other.min.key < self.min.key):
+			self.min = other.min
+		self.__size += other.get_size
+		return self
 				
 	def decrease_key(self, x, k):
 		if k > x.key:
@@ -188,13 +216,31 @@ class fibonacci_priority_queue():
 		x.key = k
 		y = x.p
 		if y != None and x.key < y.key:
-			self.cut(x, y)
-			self.cascading_cut(y)
+			self.__cut(x, y)
+			self.__cascading_cut(y)
 		if x.key < self.min.key:
 			self.min = x
+	
+	# Helper-function for decrease_key
+	def __cut(self, x, y):
+		if x.right != x:
+			x.remove()
+		y.degree -= 1
+		self.min.insert(x)
+		x.p = None
+		x.mark = False
+
+	# Helper-function for decrease_key
+	def __cascading_cut(self, y):
+		z = y.p
+		if z != None:
+			if y.mark == False:
+				y.mark = True
+			else:
+				self.__cut(y, z)
+				self.__cascading_cut(z)
 			
 	def delete(self, x):
 		self.decrease_key(x, self.min.key - 1)
 		self.extract_top()
 		
-meldable_priority_queue.register(fibonacci_priority_queue)

@@ -66,6 +66,9 @@ class fibonacci_priority_queue():
 		
 	def __iter__(self):
 		return self
+		
+	def __del__(self):
+		self.min = None
 
 	def insert(self, x):
 		x.degree = 0
@@ -158,6 +161,9 @@ class fibonacci_priority_queue():
 				self.consolidate()
 			self.size -= 1
 		return z
+	
+	def find_top(self):
+		return self.min
 				
 	def cut(self, x, y):
 		if x.right != x:

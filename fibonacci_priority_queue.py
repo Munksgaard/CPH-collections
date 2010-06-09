@@ -36,11 +36,11 @@ class fibonacci_node(object):
 		x.left.right = x
 		
 	def concatenate(self, other):
-		oldleft = self.left
-		self.left = other.min
-		other.min.right.left = oldleft
-		oldleft.right = other.min.right
-		other.min.right = self
+		oldright = self.right
+		self.right = other
+		other.left.right = oldright
+		oldright.left = other.left
+		other.left = self
 		
 	def remove(self):
 		""" Removes the node from the list its in.
@@ -116,6 +116,8 @@ class fibonacci_priority_queue(meldable_priority_queue):
 		if self.min == None:
 			# create a root list for self containing just x
 			self.min = x
+			self.min.right = self.min
+			self.min.left = self.min
 		else:
 			# insert x to the root list of self
 			self.min.insert(x)
@@ -131,18 +133,19 @@ class fibonacci_priority_queue(meldable_priority_queue):
 				for x in z.child:
 					self.min.insert(x)
 					x.p = None
-					
+				for node in z:
+					print(node.key)
 			z.remove()
 			if z == z.right:
 				self.min = None
 			else:
 				self.min = z.right
-				self.__consolidate()
+				self.consolidate()
 			self.__size -= 1
 		return z
 	
 	# Helper-function for extract_top
-	def __consolidate(self):
+	def consolidate(self):
 		A = [None for x in range(int(self.__D()) + 1)]
 
 		for w in self.min:			
@@ -204,7 +207,7 @@ class fibonacci_priority_queue(meldable_priority_queue):
 	
 	def union(self, other):
 		# concatenate the root list of other to self
-		self.min.concatenate(other)
+		self.min.concatenate(other.min)
 		if self.min == None or (other.min != None and other.min.key < self.min.key):
 			self.min = other.min
 		self.__size += other.get_size
@@ -225,6 +228,8 @@ class fibonacci_priority_queue(meldable_priority_queue):
 	def __cut(self, x, y):
 		if x.right != x:
 			x.remove()
+		else:
+			y.child = None
 		y.degree -= 1
 		self.min.insert(x)
 		x.p = None

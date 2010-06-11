@@ -46,18 +46,7 @@ class fibonacci_node(object):
 		""" Removes the node from the list its in.
 		Only works if its not the only node in the list."""
 		self.right.left = self.left
-		self.left.right = self.right
-		
-	def exchange(self, other):
-		oldright = self.right
-		oldleft = self.left
-		
-		self.right = other.right
-		other.right = oldright
-		
-		self.left = other.left
-		other.left = oldleft
-		
+		self.left.right = self.right		
 
 class fibonacci_priority_queue(meldable_priority_queue):
 
@@ -82,9 +71,8 @@ class fibonacci_priority_queue(meldable_priority_queue):
 		
 	comparator = property(get_comparator)
 	
-	# Overwrites the API function
 	def __iter__(self):
-		return self
+		return self._iterator
 		
 	iterator = property(__iter__, set_iterator)
 	
@@ -95,17 +83,31 @@ class fibonacci_priority_queue(meldable_priority_queue):
 	
 	is_empty = property(get_is_empty)
 	
-	# INCOMPLETE
 	def swap(self, other):
-		tmp = other
-		other = self
-		self = tmp
+		oldself = []
+		while True:
+			tmp = self.extract_top()
+			if tmp == None:
+				break
+			else:
+				oldself.append(tmp)
+		
+		oldother = []
+		while True:
+			tmp = other.extract_top()
+			if tmp == None:
+				break
+			else:
+				oldother.append(tmp)
+		
+		for e in oldself: other.insert(e)
+		for e in oldother: self.insert(e)
 
 	def find_top(self):
 		return self.min
 	
 	def top(self):
-		pass # INCOMPLETE
+		return self.min.element
 
 	def insert(self, x):
 		x.degree = 0
@@ -133,19 +135,17 @@ class fibonacci_priority_queue(meldable_priority_queue):
 				for x in z.child:
 					self.min.insert(x)
 					x.p = None
-				for node in z:
-					print(node.key)
 			z.remove()
 			if z == z.right:
 				self.min = None
 			else:
 				self.min = z.right
-				self.consolidate()
+				self.__consolidate()
 			self.__size -= 1
 		return z
 	
 	# Helper-function for extract_top
-	def consolidate(self):
+	def __consolidate(self):
 		A = [None for x in range(int(self.__D()) + 1)]
 
 		for w in self.min:			
@@ -154,7 +154,9 @@ class fibonacci_priority_queue(meldable_priority_queue):
 			while A[d] != None:
 				y = A[d]
 				if x.key > y.key:
-					x.exchange(y)
+					tmp = y
+					y = x
+					x = tmp
 				self.__heap_link(y, x)
 				A[d] = None
 				d += 1
@@ -197,10 +199,7 @@ class fibonacci_priority_queue(meldable_priority_queue):
 		y.mark = False
 		
 	def extract(self, encapsulator):
-		pass # UNIMPLEMENTED
-	
-	def erase(self, encapsulator):
-		pass # UNIMPLEMENTED
+		extract_top()
 	
 	def increase(self, encapsulator, element):
 		pass # UNIMPLEMENTED
@@ -210,7 +209,7 @@ class fibonacci_priority_queue(meldable_priority_queue):
 		self.min.concatenate(other.min)
 		if self.min == None or (other.min != None and other.min.key < self.min.key):
 			self.min = other.min
-		self.__size += other.get_size
+		self.__size += other.size
 		return self
 				
 	def decrease_key(self, x, k):
@@ -245,7 +244,7 @@ class fibonacci_priority_queue(meldable_priority_queue):
 				self.__cut(y, z)
 				self.__cascading_cut(z)
 			
-	def delete(self, x):
+	def erase(self, x):
 		self.decrease_key(x, self.min.key - 1)
 		self.extract_top()
 		

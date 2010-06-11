@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from heapq import *
+from random import sample
 
 def heapq_benchmark(keys):
 	queue = []
@@ -16,4 +17,11 @@ def heapq_benchmark(keys):
 	except IndexError:
 		pass
 	
-	print("Heapq done!")
+#	print("Heapq done!")
+
+def main():
+	keys = sample(list(range(1, 20000)), 10000)
+	heapq_benchmark(keys)
+
+if __name__=="__main__":
+	main()

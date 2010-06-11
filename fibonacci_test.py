@@ -66,6 +66,7 @@ class TestFibonacciNodes(unittest.TestCase):
 		self.assertTrue(self.nodes[0] == self.nodes[0].right.right == self.nodes[0].left.left)
 		self.assertTrue(self.nodes[1] == self.nodes[1].right.right == self.nodes[1].left.left)
 	
+	"""
 	def test_exchange1(self):
 		for i in range(1, 5):
 			self.nodes[0].insert(self.nodes[i])
@@ -79,7 +80,7 @@ class TestFibonacciNodes(unittest.TestCase):
 		self.nodes[0].exchange(self.nodes[5])
 		
 		self.assertTrue(self.nodes[0].right == oldright5 and self.nodes[0].left == oldleft5)
-		self.assertTrue(self.nodes[5].right == oldright0 and self.nodes[5].left == oldleft0)
+		self.assertTrue(self.nodes[5].right == oldright0 and self.nodes[5].left == oldleft0) #"""
 		
 class TestFibonacciPriorityQueue(unittest.TestCase):
 
@@ -116,9 +117,6 @@ class TestFibonacciPriorityQueue(unittest.TestCase):
 		
 		self.assertTrue(self.q.size == len(self.nodes))
 		self.assertTrue(self.q.min == self.nodes[4])
-
-	def test_consolidate(self):
-		pass
 	
 	def test_extract_top1(self):
 		self.q.insert(self.nodes[0])
@@ -144,13 +142,67 @@ class TestFibonacciPriorityQueue(unittest.TestCase):
 		for node in self.nodes:
 			self.q.insert(node)
 		
+		
 		for value in sorted(self.testnode_values):
 			tmp = self.q.extract_top()
 			if tmp == None:
 				break
-			print("\n" + str(tmp.key))
-			print(value)
 			self.assertTrue(tmp.key == value)
+			
+	def test_union1(self):
+		q2 = fibonacci_priority_queue()
+		
+		for node in self.nodes[:5]:
+			self.q.insert(node)
+		
+		for node in self.nodes[5:]:
+			q2.insert(node)
+		
+		self.q.union(q2)
+
+		self.assertTrue(self.q.size == 10)
+		tmp = [node for node in self.q.min]
+		self.assertTrue([node for node in tmp if node not in self.nodes] == [])
+		self.q.min == self.nodes[5]
+	
+	def test_decrease_key1(self):
+		for node in self.nodes:
+			self.q.insert(node)
+		self.q.decrease_key(self.nodes[9], 30)
+		self.assertTrue(self.q.min == self.nodes[4])
+		
+		self.q.decrease_key(self.nodes[9], 2)
+		self.assertTrue(self.q.min == self.nodes[9])
+		
+		self.q.extract_top() #popper 2 ud og consolidater
+		self.q.decrease_key(self.nodes[3], 40)
+		self.assertTrue(self.q.min == self.nodes[4])
+		
+		self.q.decrease_key(self.nodes[3], 1)
+		self.assertTrue(self.q.min == self.nodes[3])
+		
+	def test_erase1(self):
+		for node in self.nodes:
+			self.q.insert(node)
+
+		self.q.erase(self.nodes[3])
+		self.assertTrue(self.q.size == 9)
+	
+	def test_swap1(self):
+		for node in self.testnode_values[:5]:
+			self.q.insert(fibonacci_node(node))
+		
+		q2 = fibonacci_priority_queue()
+		for node in self.testnode_values[5:]:
+			q2.insert(fibonacci_node(node))
+		
+		self.q.swap(q2)
+		
+		self.assertTrue(self.q.min.key == 7)
+		self.assertTrue(q2.min.key == 3)
+		self.assertTrue(sorted([node.key for node in self.q.min]) == sorted(self.testnode_values[5:]))
+		self.assertTrue(sorted([node.key for node in q2.min]) == sorted(self.testnode_values[:5]))
+		
 			
 if __name__=="__main__":
 	unittest.main()
